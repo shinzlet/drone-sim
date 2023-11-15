@@ -1,0 +1,57 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #1c1125;
+    color: white;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header,
+footer {
+    padding: 10px;
+    text-align: center;
+}
+
+#main-content {
+    display: flex;
+    flex-grow: 1;
+}
+
+#settings-pane {
+    min-width: 200px;
+    background-color: #251f3f;
+    padding: 20px;
+    box-sizing: border-box;
+    margin: 20px;
+    border-radius: 20px;
+}
+
+#svg-drawing-area {
+    flex-grow: 1;
+}
+
+input[type=range] {
+    width: 100%;
+    margin: 10px 0;
+}
+
+h1 {
+    margin: 0;
+    color: #392c5c;
+}
+
+footer p {
+    margin: 0;
+}
+
+#drone-frame {
+    fill: #FFC743;
+}
+
+#left-motor,
+#right-motor {
+    fill: #EFBB41;
+}
