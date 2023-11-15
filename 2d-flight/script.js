@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial drone position, velocity, and angle using Victor
     let dronePosition = new Victor(0, 0);
     let droneVelocity = new Victor(0, 0);
-    let droneAngle = 0;
+    let droneAngle = 0.1;
+    let angularVelocity = 0;
 
     const massSlider = document.getElementById('mass-slider');
     let droneMass = massSlider.value;
@@ -24,19 +25,45 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastTime = 0;
 
 
-    function updateDrone(deltaTime, position, velocity, angle) {
-        // Use droneMass in your physics calculations
+    function updateDrone(deltaTime, position, velocity, angle, angularVelocity, l) {
+        let F1 = 10;
+        let F2 = 10;
+        l /= 10;
+        // I is the moment of inertia, for simplicity, assume a constant
+        const I = droneMass * l * l / 12; // Simplified moment of inertia for a rod
+
+        // Calculate Torque
+        const torque = l / 2 * (F1 - F2);
+
+        // Calculate Angular Acceleration
+        const angularAcceleration = torque / I;
+
+        // Update Angular Velocity
+        angularVelocity += angularAcceleration * deltaTime;
+
+        // Update Angle
+        angle += angularVelocity * deltaTime;
+
+        // Calculate Net Force
+        let netForce = F1 + F2;
+        let forceDirection = new Victor(Math.sin(angle), -Math.cos(angle)); // Direction of force
+        let forceVector = forceDirection.multiplyScalar(netForce);
+
+        // Update Velocity
+        let acceleration = forceVector.clone().divideScalar(droneMass);
+        velocity.add(acceleration.multiplyScalar(deltaTime));
+
         let gravity = new Victor(0, 9.81 * droneMass); // Example: gravity affected by mass
         let gravityEffect = gravity.multiplyScalar(deltaTime);
         velocity.add(gravityEffect);
 
+        // Update Position
         let displacement = velocity.clone().multiplyScalar(deltaTime);
         position.add(displacement);
-
-        angle += deltaTime * 10; // Example: increment angle
-
-        return { centroid: position, angle: angle };
+        console.log(angle)
+        return { centroid: position, angle: angle, angularVelocity: angularVelocity };
     }
+
 
     // Function to update the SVG elements for the drone
     function updateDroneRendering() {
@@ -45,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const centerY = dronePosition.y;
 
         // Apply rotation transformation around the center of the drone
-        const transform = `rotate(${droneAngle} ${centerX} ${centerY})`;
+        const transform = `rotate(${droneAngle * 180 / 3.14} ${centerX} ${centerY})`;
 
         // Set attributes for the drone frame
         droneFrame.setAttribute('x', dronePosition.x - frameWidth / 2);
@@ -77,10 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Convert deltaTime to seconds for easier physics calculations
         deltaTime /= 1000;
 
-        const updatedDrone = updateDrone(deltaTime, dronePosition, droneVelocity, droneAngle);
+        const updatedDrone = updateDrone(deltaTime, dronePosition, droneVelocity, droneAngle, angularVelocity, frameWidth);
 
         dronePosition = updatedDrone.centroid;
         droneAngle = updatedDrone.angle;
+        angularVelocity = updatedDrone.angularVelocity;
 
         updateDroneRendering();
         requestAnimationFrame(animate);
